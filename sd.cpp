@@ -1,48 +1,49 @@
-#include "sd.hpp"
+﻿#include "sd.hpp"
 
-static File file;
+SdFat sd;
+SdFile dir;
 
-bool sd::setup()
+bool SD::setup()
 {
       pinMode(53,OUTPUT);
-      if (!SD.begin(53))
-          return false;
-//      file = SD.open("/");
-//      file.close();
-      file = SD.open("/");
+      if (!sd.begin(53, SPI_HALF_SPEED))
+         return false;
+      dir.open("/");
       return true;
 }
 
-void  sd::get_roms(uint8_t page, String arr[]) {
-  file.rewindDirectory();
-  for(uint8_t i = 0 ; i < page*5 ; ++i){
-      if (! file.openNextFile()) {
-        return;
-      }
-  }
-  for(uint8_t i = 0 ; i < 5 ; ++i){
-    File entry =  file.openNextFile();
-    if (! entry)
-      break;
-    arr[i] = entry.name();
-    entry.close();
-  }
+bool  SD::get_roms(uint8_t page, String arr[]) {
+    dir.rewind();
+    SdFile file;
+    for(uint8_t i = 0 ; i < page*5 ; ++i){
+        if (! file.openNext(&dir,O_READ))
+          return false;
+    }
+    for(uint8_t i = 0 ; i < 5 ; ++i){
+      file.openNext(&dir,O_READ);
+      char name[32];
+      file.getName(name,32);
+      arr[i] = name;
+    }
+    return true;
+
 }
 
 
-bool sd::load_rom(String name, uint8_t mem[])
+bool SD::load_rom(String name, uint8_t mem[])
 {
-    file.close();
-    file = SD.open(name);
-    int index = 0x200;
-     if (!file) {
+    if(!dir.open(name.c_str()))
+        return false;
+    uint16_t index = 0x200;
+     if (!dir) {
        return false;
      }
      Serial.println(name);
-     while (file.available()) {
-       mem[index++] = file.read();
+     while (dir.available()) {
+       mem[index++] = dir.read();
      }
-     file.close();
+
+     dir.close();
 
      return true;
 }

@@ -10,7 +10,7 @@ Keypad pad = Keypad( makeKeymap(keypad::keys), keypad::row_pins, keypad::col_pin
 String page_roms[5] = {};
 uint8_t current_page = {};
 uint8_t current_rom = {};
-bool started = false;
+bool started =  false;
 
 void launch_game(){
     if(chip8::drawFlag){
@@ -44,14 +44,14 @@ if (pad.getKeys()){
          if (pad.key[i].kstate == PRESSED){
              switch(pad.key[i].kchar){
                  case 0x6:{
-                     current_page++;
-                     current_page %= 4;
-                     sd::get_roms(current_page, page_roms);
+                     if (!SD::get_roms(++current_page, page_roms) )
+                         current_page--;
                      break;
                  }
                  case 0x4:{
-                     current_page = current_page ? current_page -1 : 0;
-                     sd::get_roms(current_page, page_roms);
+                     if(current_page)
+                        current_page--;
+                     SD::get_roms(current_page, page_roms);
                      break;
                  }
                  case 0x2:{
@@ -66,8 +66,10 @@ if (pad.getKeys()){
                  }
                 case 0xC:{
                     chip8::setup();
-                    if(!sd::load_rom(page_roms[current_rom], chip8::memory)){
+                    if(!SD::load_rom(page_roms[current_rom], chip8::memory)){
                        display::message("failed to open rom");
+                       delay(1000);
+                       break;
                     }
                     started=true;
                  }
@@ -81,12 +83,13 @@ if (pad.getKeys()){
 
 void setup(void) {
    display::setup();
-   if (!sd::setup()){
-        display::message("Failed to open SD card");
+   if (!SD::setup()){
+       while(1){
+        display::message("Failed to open SD");
+       }
    }
-   sd::get_roms(current_page, page_roms);
+   SD::get_roms(current_page, page_roms);
    display::page(page_roms,current_rom);
-
 }
 
 void loop(void) {

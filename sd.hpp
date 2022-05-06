@@ -1,7 +1,8 @@
 #pragma once
-#include <SD.h>
-namespace sd {
+#include <SdFat.h>
+
+namespace SD {
     bool setup();
     bool load_rom(String name, uint8_t mem[]);
-    void get_roms(uint8_t page, String arr[]);
+    bool get_roms(uint8_t page, String arr[]);
 } // namespace sd

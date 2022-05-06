@@ -33,13 +33,11 @@ void display::draw(uint8_t pixels[])
 
 void display::message(String msg)
 {
-    while(1){
     u8g2.firstPage();
      do {
        u8g2.setFont(u8g2_font_t0_11_tf);
        u8g2.drawStr(0,8,msg.c_str());
      } while ( u8g2.nextPage() );
-    }
 }
 
 
